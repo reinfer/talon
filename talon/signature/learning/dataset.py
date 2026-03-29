@@ -21,8 +21,6 @@ from __future__ import absolute_import
 import os
 
 import regex as re
-from six.moves import range
-
 from talon.signature.constants import SIGNATURE_MAX_LINES
 from talon.signature.learning.featurespace import build_pattern, features
 

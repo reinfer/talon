@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
 set -ex
+
+if [ -z "$VIRTUAL_ENV" ] && [ -f "./venv/bin/activate" ]; then
+    . ./venv/bin/activate
+fi
+
 REPORT_PATH="${REPORT_PATH:-./}"
-nosetests --with-xunit --with-coverage --cover-xml --cover-xml-file $REPORT_PATH/coverage.xml --xunit-file=$REPORT_PATH/nosetests.xml --cover-package=talon .
+pytest --tb=short \
+       --junitxml="$REPORT_PATH/pytest.xml" \
+       --cov=talon \
+       --cov-report=xml:"$REPORT_PATH/coverage.xml" \
+       tests/

@@ -7,10 +7,9 @@ from . fixtures import *
 import os
 
 import email.iterators
+import glob
+import pytest
 from talon import quotations
-import six
-from six.moves import range
-from six import StringIO
 
 
 @patch.object(quotations, 'MAX_LINES_COUNT', 1)
@@ -20,7 +19,7 @@ Hi
 -----Original Message-----
 
 Test"""
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_pattern_on_date_somebody_wrote():
@@ -33,7 +32,7 @@ On 11-Apr-2011, at 6:54 PM, Roman Tkachenko <romant@example.com> wrote:
 >
 > Roman"""
 
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 def test_pattern_on_date_polymail():
     msg_body = """Test reply
@@ -46,7 +45,7 @@ mailto:John Smith <johnsmith@gmail.com>
 Test quoted data
 """
 
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_pattern_sent_from_samsung_smb_wrote():
@@ -59,17 +58,18 @@ Sent from Samsung MobileName <address@example.com> wrote:
 >
 > Roman"""
 
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_pattern_on_date_wrote_somebody():
-    eq_('Lorem', quotations.extract_from_plain(
+    assert 'Lorem' == \
+        quotations.extract_from_plain(
     """Lorem
 
 Op 13-02-2014 3:18 schreef Julius Caesar <pantheon@rome.com>:
 
 Veniam laborum mlkshk kale chips authentic. Normcore mumblecore laboris, fanny pack readymade eu blog chia pop-up freegan enim master cleanse.
-"""))
+""")
 
 
 def test_pattern_on_date_somebody_wrote_date_with_slashes():
@@ -81,7 +81,7 @@ On 04/19/2011 07:10 AM, Roman Tkachenko wrote:
 > Test.
 >
 > Roman"""
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_date_time_email_splitter():
@@ -93,7 +93,7 @@ postmaster@sandboxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.mailgun.org>:
 > First from site
 >
     """
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_pattern_on_date_somebody_wrote_allows_space_in_front():
@@ -104,7 +104,7 @@ r+7f1b094ceb90e18cca93d53d3703feae@example.com> wrote:
 
 >**
 >  Blah-blah-blah"""
-    eq_("Thanks Thanmai", quotations.extract_from_plain(msg_body))
+    assert "Thanks Thanmai" == quotations.extract_from_plain(msg_body)
 
 
 def test_pattern_on_date_somebody_sent():
@@ -116,7 +116,7 @@ On 11-Apr-2011, at 6:54 PM, Roman Tkachenko <romant@example.com> sent:
 > Test
 >
 > Roman"""
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_appointment():
@@ -148,13 +148,13 @@ London CA 19129, 555-421-6780
 John Doe, FCLS
 Mailgun Inc
 555-941-0697"""
-    eq_(expected, quotations.extract_from_plain(msg_body))
+    assert expected == quotations.extract_from_plain(msg_body)
 
 
 def test_line_starts_with_on():
     msg_body = """Blah-blah-blah
 On blah-blah-blah"""
-    eq_(msg_body, quotations.extract_from_plain(msg_body))
+    assert msg_body == quotations.extract_from_plain(msg_body)
 
 
 def test_reply_and_quotation_splitter_share_line():
@@ -162,13 +162,13 @@ def test_reply_and_quotation_splitter_share_line():
     # are on the same line
     msg_body = """reply On Wed, Apr 4, 2012 at 3:59 PM, bob@example.com wrote:
 > Hi"""
-    eq_('reply', quotations.extract_from_plain(msg_body))
+    assert 'reply' == quotations.extract_from_plain(msg_body)
 
     # test pattern '--- On <date> <person> wrote:' with reply text on
     # the same line
     msg_body = """reply--- On Wed, Apr 4, 2012 at 3:59 PM, me@domain.com wrote:
 > Hi"""
-    eq_('reply', quotations.extract_from_plain(msg_body))
+    assert 'reply' == quotations.extract_from_plain(msg_body)
 
     # test pattern '--- On <date> <person> wrote:' with reply text containing
     # '-' symbol
@@ -178,7 +178,7 @@ bla-bla - bla--- On Wed, Apr 4, 2012 at 3:59 PM, me@domain.com wrote:
     reply = """reply
 bla-bla - bla"""
 
-    eq_(reply, quotations.extract_from_plain(msg_body))
+    assert reply == quotations.extract_from_plain(msg_body)
 
 
 def _check_pattern_original_message(original_message_indicator):
@@ -187,8 +187,9 @@ def _check_pattern_original_message(original_message_indicator):
 -----{}-----
 
 Test"""
-    eq_('Test reply', quotations.extract_from_plain(
-        msg_body.format(six.text_type(original_message_indicator))))
+    assert 'Test reply' == \
+        quotations.extract_from_plain(
+        msg_body.format(str(original_message_indicator)))
 
 def test_english_original_message():
     _check_pattern_original_message('Original Message')
@@ -208,7 +209,7 @@ def test_reply_after_quotations():
 >
 > Test
 Test reply"""
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_android_wrote():
@@ -219,7 +220,7 @@ def test_android_wrote():
 > quoted
 > text
 """
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_reply_wraps_quotations():
@@ -236,7 +237,7 @@ Regards, Roman"""
 
 Regards, Roman"""
 
-    eq_(reply, quotations.extract_from_plain(msg_body))
+    assert reply == quotations.extract_from_plain(msg_body)
 
 
 def test_reply_wraps_nested_quotations():
@@ -255,7 +256,7 @@ Regards, Roman"""
 
     reply = """Test reply
 Regards, Roman"""
-    eq_(reply, quotations.extract_from_plain(msg_body))
+    assert reply == quotations.extract_from_plain(msg_body)
 
 
 def test_quotation_separator_takes_2_lines():
@@ -273,7 +274,7 @@ Regards, Roman"""
     reply = """Test reply
 
 Regards, Roman"""
-    eq_(reply, quotations.extract_from_plain(msg_body))
+    assert reply == quotations.extract_from_plain(msg_body)
 
 
 def test_quotation_separator_takes_3_lines():
@@ -285,7 +286,7 @@ wrote:
 
 Test message
 """
-    eq_("Test reply", quotations.extract_from_plain(msg_body))
+    assert "Test reply" == quotations.extract_from_plain(msg_body)
 
 
 def test_short_quotation():
@@ -294,7 +295,7 @@ def test_short_quotation():
 On 04/19/2011 07:10 AM, Roman Tkachenko wrote:
 
 > Hello"""
-    eq_("Hi", quotations.extract_from_plain(msg_body))
+    assert "Hi" == quotations.extract_from_plain(msg_body)
 
 def test_with_indent():
     msg_body = """YOLO salvia cillum kogi typewriter mumblecore cardigan skateboard Austin.
@@ -303,7 +304,8 @@ def test_with_indent():
 
 Brunch mumblecore pug Marfa tofu, irure taxidermy hoodie readymade pariatur.
     """
-    eq_("YOLO salvia cillum kogi typewriter mumblecore cardigan skateboard Austin.", quotations.extract_from_plain(msg_body))
+    assert "YOLO salvia cillum kogi typewriter mumblecore cardigan skateboard Austin." == \
+        quotations.extract_from_plain(msg_body)
 
 
 def test_short_quotation_with_newline():
@@ -321,7 +323,7 @@ Lorem ipsum?
 Mark
 
 Sent from Acompli"""
-    eq_("Btw blah blah...", quotations.extract_from_plain(msg_body))
+    assert "Btw blah blah..." == quotations.extract_from_plain(msg_body)
 
 
 def test_pattern_date_email_with_unicode():
@@ -329,11 +331,12 @@ def test_pattern_date_email_with_unicode():
 2011/4/7 Nathan \xd0\xb8ova <support@example.com>
 
 >  Cool beans, scro"""
-    eq_("Replying ok", quotations.extract_from_plain(msg_body))
+    assert "Replying ok" == quotations.extract_from_plain(msg_body)
 
 
 def test_english_from_block():
-    eq_('Allo! Follow up MIME!', quotations.extract_from_plain("""Allo! Follow up MIME!
+    assert 'Allo! Follow up MIME!' == \
+        quotations.extract_from_plain("""Allo! Follow up MIME!
 
 From: somebody@example.com
 Sent: March-19-11 5:42 PM
@@ -341,10 +344,11 @@ To: Somebody
 Subject: The manager has commented on your Loop
 
 Blah-blah-blah
-"""))
+""")
 
 def test_german_from_block():
-    eq_('Allo! Follow up MIME!', quotations.extract_from_plain(
+    assert 'Allo! Follow up MIME!' == \
+        quotations.extract_from_plain(
     """Allo! Follow up MIME!
 
 Von: somebody@example.com
@@ -353,10 +357,11 @@ An: Somebody
 Betreff: The manager has commented on your Loop
 
 Blah-blah-blah
-"""))
+""")
 
 def test_french_multiline_from_block():
-    eq_('Lorem ipsum', quotations.extract_from_plain(
+    assert 'Lorem ipsum' == \
+        quotations.extract_from_plain(
     u"""Lorem ipsum
 
 De : Brendan xxx [mailto:brendan.xxx@xxx.com]
@@ -365,28 +370,31 @@ Envoyé : vendredi 23 janvier 2015 16:39
 Objet : Follow Up
 
 Blah-blah-blah
-"""))
+""")
 
 def test_french_from_block():
-    eq_('Lorem ipsum', quotations.extract_from_plain(
+    assert 'Lorem ipsum' == \
+        quotations.extract_from_plain(
     u"""Lorem ipsum
 
 Le 23 janv. 2015 à 22:03, Brendan xxx <brendan.xxx@xxx.com<mailto:brendan.xxx@xxx.com>> a écrit:
 
-Bonjour!"""))
+Bonjour!""")
 
 def test_polish_from_block():
-    eq_('Lorem ipsum', quotations.extract_from_plain(
+    assert 'Lorem ipsum' == \
+        quotations.extract_from_plain(
     u"""Lorem ipsum
 
 W dniu 28 stycznia 2015 01:53 użytkownik Zoe xxx <zoe.xxx@xxx.com>
 napisał:
 
 Blah!
-"""))
+""")
 
 def test_danish_from_block():
-    eq_('Allo! Follow up MIME!', quotations.extract_from_plain(
+    assert 'Allo! Follow up MIME!' == \
+        quotations.extract_from_plain(
     """Allo! Follow up MIME!
 
 Fra: somebody@example.com
@@ -395,10 +403,11 @@ Til: Somebody
 Emne: The manager has commented on your Loop
 
 Blah-blah-blah
-"""))
+""")
 
 def test_swedish_from_block():
-    eq_('Allo! Follow up MIME!', quotations.extract_from_plain(
+    assert 'Allo! Follow up MIME!' == \
+        quotations.extract_from_plain(
     u"""Allo! Follow up MIME!
 Från: Anno Sportel [mailto:anno.spoel@hsbcssad.com]
 Skickat: den 26 augusti 2015 14:45
@@ -406,47 +415,51 @@ Till: Isacson Leiff
 Ämne: RE: Week 36
 
 Blah-blah-blah
-"""))
+""")
 
 def test_swedish_from_line():
-    eq_('Lorem', quotations.extract_from_plain(
+    assert 'Lorem' == \
+        quotations.extract_from_plain(
     """Lorem
 Den 14 september, 2015 02:23:18, Valentino Rudy (valentino@rudy.be) skrev:
 
 Veniam laborum mlkshk kale chips authentic. Normcore mumblecore laboris, fanny pack readymade eu blog chia pop-up freegan enim master cleanse.
-"""))
+""")
 
 def test_norwegian_from_line():
-    eq_('Lorem', quotations.extract_from_plain(
+    assert 'Lorem' == \
+        quotations.extract_from_plain(
     u"""Lorem
 På 14 september 2015 på 02:23:18, Valentino Rudy (valentino@rudy.be) skrev:
 
 Veniam laborum mlkshk kale chips authentic. Normcore mumblecore laboris, fanny pack readymade eu blog chia pop-up freegan enim master cleanse.
-"""))
+""")
 
 def test_dutch_from_block():
-    eq_('Gluten-free culpa lo-fi et nesciunt nostrud.', quotations.extract_from_plain(
+    assert 'Gluten-free culpa lo-fi et nesciunt nostrud.' == \
+        quotations.extract_from_plain(
     """Gluten-free culpa lo-fi et nesciunt nostrud.
 
 Op 17-feb.-2015, om 13:18 heeft Julius Caesar <pantheon@rome.com> het volgende geschreven:
 
 Small batch beard laboris tempor, non listicle hella Tumblr heirloom.
-"""))
+""")
 
 def test_vietnamese_from_block():
-    eq_('Hello', quotations.extract_from_plain(
+    assert 'Hello' == \
+        quotations.extract_from_plain(
     u"""Hello
 
 Vào 14:24 8 tháng 6, 2017, Hùng Nguyễn <hungnguyen@xxx.com> đã viết:
 
 > Xin chào
-"""))
+""")
 
 def test_quotation_marker_false_positive():
     msg_body = """Visit us now for assistance...
 >>> >>>  http://www.domain.com <<<
 Visit our site by clicking the link above"""
-    eq_(msg_body, quotations.extract_from_plain(msg_body))
+    assert msg_body == quotations.extract_from_plain(msg_body)
 
 
 def test_link_closed_with_quotation_marker_on_new_line():
@@ -459,7 +472,7 @@ Date: Wed, 16 May 2012 00:15:02 -0600
 >  <bob@example.com <mailto:bob@example.com> >
 
 Requester: '''
-    eq_('8.45am-1pm', quotations.extract_from_plain(msg_body))
+    assert '8.45am-1pm' == quotations.extract_from_plain(msg_body)
 
 
 def test_link_breaks_quotation_markers_sequence():
@@ -475,7 +488,7 @@ On Thursday, October 25, 2012 at 3:03 PM, life is short. on Bob wrote:
 > life is short. (http://example.com/c/YzMmE)
 >
 """
-    eq_("Blah", quotations.extract_from_plain(msg_body))
+    assert "Blah" == quotations.extract_from_plain(msg_body)
 
     # link starts after some text on one line and ends on another
     msg_body = """Blah
@@ -488,7 +501,7 @@ On Monday, 24 September, 2012 at 3:46 PM, bob wrote:
 _nonce=3dd518)
 >
 """
-    eq_("Blah", quotations.extract_from_plain(msg_body))
+    assert "Blah" == quotations.extract_from_plain(msg_body)
 
 
 def test_from_block_starts_with_date():
@@ -498,7 +511,7 @@ Date: Wed, 16 May 2012 00:15:02 -0600
 To: klizhentas@example.com
 
 """
-    eq_('Blah', quotations.extract_from_plain(msg_body))
+    assert 'Blah' == quotations.extract_from_plain(msg_body)
 
 
 def test_bold_from_block():
@@ -511,7 +524,7 @@ def test_bold_from_block():
   *Subject:* Hello
 
 """
-    eq_("Hi", quotations.extract_from_plain(msg_body))
+    assert "Hi" == quotations.extract_from_plain(msg_body)
 
 
 def test_weird_date_format_in_date_block():
@@ -522,7 +535,7 @@ To: bob@example.com
 Subject: [Ticket #8] Test
 
 """
-    eq_('Blah', quotations.extract_from_plain(msg_body))
+    assert 'Blah' == quotations.extract_from_plain(msg_body)
 
 
 def test_dont_parse_quotations_for_forwarded_messages():
@@ -536,7 +549,7 @@ line subject
 To: rob@example.com
 
 Text"""
-    eq_(msg_body, quotations.extract_from_plain(msg_body))
+    assert msg_body == quotations.extract_from_plain(msg_body)
 
 
 def test_forwarded_message_in_quotations():
@@ -554,7 +567,7 @@ line subject
 To: rob@example.com
 
 """
-    eq_("Blah", quotations.extract_from_plain(msg_body))
+    assert "Blah" == quotations.extract_from_plain(msg_body)
 
 
 def test_mark_message_lines():
@@ -572,7 +585,7 @@ def test_mark_message_lines():
              '> Hi',
              '',
              'Signature']
-    eq_('tesssemet', quotations.mark_message_lines(lines))
+    assert 'tesssemet' == quotations.mark_message_lines(lines)
 
     lines = ['Just testing the email reply',
              '',
@@ -586,7 +599,7 @@ def test_mark_message_lines():
              'wrote:',
              '',
              'Tarmo Lehtpuu has posted the following message on']
-    eq_('tettessset', quotations.mark_message_lines(lines))
+    assert 'tettessset' == quotations.mark_message_lines(lines)
 
 
 def test_process_marked_lines():
@@ -596,27 +609,27 @@ def test_process_marked_lines():
     lines = [str(i) for i in range(len(markers))]
     lines = [str(i) for i in range(len(markers))]
 
-    eq_(lines, quotations.process_marked_lines(lines, markers))
+    assert lines == quotations.process_marked_lines(lines, markers)
 
     # no splitter => no markers
     markers = 'tmm'
     lines = ['1', '2', '3']
-    eq_(['1', '2', '3'], quotations.process_marked_lines(lines, markers))
+    assert ['1', '2', '3'] == quotations.process_marked_lines(lines, markers)
 
     # text after splitter without markers is quotation
     markers = 'tst'
     lines = ['1', '2', '3']
-    eq_(['1'], quotations.process_marked_lines(lines, markers))
+    assert ['1'] == quotations.process_marked_lines(lines, markers)
 
     # message + quotation + signature
     markers = 'tsmt'
     lines = ['1', '2', '3', '4']
-    eq_(['1', '4'], quotations.process_marked_lines(lines, markers))
+    assert ['1', '4'] == quotations.process_marked_lines(lines, markers)
 
     # message + <quotation without markers> + nested quotation
     markers = 'tstsmt'
     lines = ['1', '2', '3', '4', '5', '6']
-    eq_(['1'], quotations.process_marked_lines(lines, markers))
+    assert ['1'] == quotations.process_marked_lines(lines, markers)
 
     # test links wrapped with paranthesis
     # link starts on the marker line
@@ -628,7 +641,7 @@ def test_process_marked_lines():
              ')',
              '',
              '> quote']
-    eq_(lines[:1], quotations.process_marked_lines(lines, markers))
+    assert lines[:1] == quotations.process_marked_lines(lines, markers)
 
     # link starts on the new line
     markers = 'tmmmtm'
@@ -639,7 +652,7 @@ def test_process_marked_lines():
              '(http://example.com) >  ',
              '> life is short. (http://example.com)  '
              ]
-    eq_(lines[:1], quotations.process_marked_lines(lines, markers))
+    assert lines[:1] == quotations.process_marked_lines(lines, markers)
 
     # check all "inline" replies
     markers = 'tsmtmtm'
@@ -650,7 +663,7 @@ def test_process_marked_lines():
              '>',
              'inline  reply',
              '>']
-    eq_(lines, quotations.process_marked_lines(lines, markers))
+    assert lines == quotations.process_marked_lines(lines, markers)
 
     # inline reply with link not wrapped in paranthesis
     markers = 'tsmtm'
@@ -659,7 +672,7 @@ def test_process_marked_lines():
              '>',
              'inline reply with link http://example.com',
              '>']
-    eq_(lines, quotations.process_marked_lines(lines, markers))
+    assert lines == quotations.process_marked_lines(lines, markers)
 
     # inline reply with link wrapped in paranthesis
     markers = 'tsmtm'
@@ -668,7 +681,7 @@ def test_process_marked_lines():
              '>',
              'inline  reply (http://example.com)',
              '>']
-    eq_(lines, quotations.process_marked_lines(lines, markers))
+    assert lines == quotations.process_marked_lines(lines, markers)
 
 
 def test_preprocess():
@@ -694,7 +707,7 @@ def test_preprocess():
                     'wrote:\n'
                     '\n'
                     '> Hi')
-    eq_(prepared_msg, quotations.preprocess(msg, '\n'))
+    assert prepared_msg == quotations.preprocess(msg, '\n')
 
     msg = """
 > <http://teemcl.mailgun.org/u/**aD1mZmZiNGU5ODQwMDNkZWZlMTExNm**
@@ -703,7 +716,7 @@ def test_preprocess():
 
 > Z0PSUyQSZkPWUwY2U<http://example.org/u/aD1mZmZiNGU5ODQwMDNkZWZlMTExNmMxNjQ4Y>
     """
-    eq_(msg, quotations.preprocess(msg, '\n'))
+    assert msg == quotations.preprocess(msg, '\n')
 
     # 'On <date> <person> wrote' shouldn't be spread across too many lines
     msg = ('Hello\n'
@@ -714,7 +727,7 @@ def test_preprocess():
            'wrote:\n'
            '\n'
            '> Hi')
-    eq_(msg, quotations.preprocess(msg, '\n'))
+    assert msg == quotations.preprocess(msg, '\n')
 
     msg = ('Hello On Nov 30, smb wrote:\n'
            'Hi\n'
@@ -727,44 +740,49 @@ def test_preprocess():
                     'On Nov 29, smb wrote:\n'
                     'hi')
 
-    eq_(prepared_msg, quotations.preprocess(msg, '\n'))
+    assert prepared_msg == quotations.preprocess(msg, '\n')
 
 
 def test_preprocess_postprocess_2_links():
     msg_body = "<http://link1> <http://link2>"
-    eq_(msg_body, quotations.extract_from_plain(msg_body))
+    assert msg_body == quotations.extract_from_plain(msg_body)
 
 
 def body_iterator(msg, decode=False):
     for subpart in msg.walk():
         payload = subpart.get_payload(decode=decode)
-        if isinstance(payload, six.text_type):
+        if isinstance(payload, str):
             yield payload
         else:
             yield payload.decode('utf8')
 
 
-def test_standard_replies():
-    for filename in os.listdir(STANDARD_REPLIES):
-        filename = os.path.join(STANDARD_REPLIES, filename)
-        if not filename.endswith('.eml') or os.path.isdir(filename):
-            continue
-        with open(filename) as f:
-            message = email.message_from_file(f)
-            body = next(email.iterators.typed_subpart_iterator(message, subtype='plain'))
-            text = ''.join(body_iterator(body, True))
+_STANDARD_REPLY_FILES = sorted(
+    f for f in glob.glob(os.path.join(STANDARD_REPLIES, "*.eml"))
+    if not os.path.isdir(f)
+)
 
-            stripped_text = quotations.extract_from_plain(text)
-            reply_text_fn = filename[:-4] + '_reply_text'
-            if os.path.isfile(reply_text_fn):
-                with open(reply_text_fn) as f:
-                    reply_text = f.read().strip()
-            else:
-                reply_text = 'Hello'
-            yield eq_, reply_text, stripped_text, \
-                "'%(reply)s' != %(stripped)s for %(fn)s" % \
-                {'reply': reply_text, 'stripped': stripped_text,
-                 'fn': filename}
+
+@pytest.mark.parametrize("filename", _STANDARD_REPLY_FILES)
+def test_standard_replies(filename):
+    with open(filename) as f:
+        message = email.message_from_file(f)
+    body = next(email.iterators.typed_subpart_iterator(message, subtype='plain'))
+    text = ''.join(body_iterator(body, True))
+    stripped_text = quotations.extract_from_plain(text)
+    reply_text_fn = filename[:-4] + '_reply_text'
+    if os.path.isfile(reply_text_fn):
+        with open(reply_text_fn) as f:
+            reply_text = f.read().strip()
+    else:
+        reply_text = 'Hello'
+    assert reply_text == stripped_text, (
+        "'%(reply)s' != %(stripped)s for %(fn)s" % {
+            'reply': reply_text,
+            'stripped': stripped_text,
+            'fn': filename,
+        }
+    )
 
 
 def test_split_email():
@@ -813,7 +831,7 @@ def test_split_email():
 """
     expected_markers = "stttttsttttetesetesmmmmmmsmmmmmmmmmmmmmmmm"
     markers = quotations.split_emails(msg)
-    eq_(markers, expected_markers)
+    assert markers == expected_markers
 
 
 
@@ -826,7 +844,7 @@ The user experience was unparallelled. Please continue production. I'm sending p
 that this line is intact."""
 
     parsed = quotations.extract_from_plain(msg_body)
-    eq_(msg_body, parsed)
+    assert msg_body == parsed
 
 
 def test_appointment_2():
@@ -838,4 +856,4 @@ Address: 130 Fox St
 
 Please bring in your ID."""
     parsed = quotations.extract_from_plain(msg_body)
-    eq_(msg_body, parsed)
+    assert msg_body == parsed

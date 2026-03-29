@@ -12,8 +12,6 @@ from copy import deepcopy
 
 import regex as re
 from lxml import etree, html
-from six.moves import range
-
 from talon import html_quotations
 from talon.utils import (get_delimiter, html_document_fromstring,
                          html_tree_to_text)

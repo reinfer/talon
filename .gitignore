@@ -57,3 +57,10 @@ _trial_temp
 
 # vim-backup
 *.bak
+
+# Local virtual environment
+/venv/
+/.claude/
+/coverage.xml
+/pytest.xml
+/thoughts/

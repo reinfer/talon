@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [master, reinfer-fork]
+  pull_request:
+    branches: [master, reinfer-fork]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          # To upgrade Python, bump this version and update setup_venv.sh
+          python-version: "3.11"
+
+      - name: Set up venv
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install --upgrade pip
+          pip install -e .
+          pip install -r test-requirements.txt
+          echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+          echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+
+      - name: Run tests
+        run: |
+          REPORT_PATH=./reports
+          mkdir -p "$REPORT_PATH"
+          REPORT_PATH="$REPORT_PATH" bash run_tests.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: reports/

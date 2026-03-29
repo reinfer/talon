@@ -49,16 +49,12 @@ setup(name='talon',
           "numpy",
           "scipy",
           "scikit-learn>=1.0.0",
-          "chardet",
-          "cchardet",
           "cssselect",
-          "six",
           "html5lib",
           "joblib",
           ],
       tests_require=[
-          "mock",
-          "nose",
-          "coverage"
+          "pytest",
+          "pytest-cov",
           ]
       )

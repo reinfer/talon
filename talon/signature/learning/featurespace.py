@@ -11,7 +11,6 @@ from __future__ import absolute_import
 from talon.signature.constants import (SIGNATURE_MAX_LINES,
                                        TOO_LONG_SIGNATURE_LINE)
 from talon.signature.learning.helpers import *
-from six.moves import zip
 from functools import reduce
 
 
